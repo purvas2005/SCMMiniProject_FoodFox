@@ -1,0 +1,26 @@
+.forecast-chart {
+  width: 100%;
+}
+
+.chart-header {
+  margin-bottom: 20px;
+}
+
+.chart-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 5px;
+}
+
+.chart-header p {
+  font-size: 13px;
+  color: #7f8c8d;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .chart-header h2 {
+    font-size: 18px;
+  }
+}

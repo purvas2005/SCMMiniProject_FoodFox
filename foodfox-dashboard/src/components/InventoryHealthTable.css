@@ -1,0 +1,177 @@
+.inventory-health-table {
+  width: 100%;
+}
+
+.table-header {
+  margin-bottom: 20px;
+}
+
+.table-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 5px;
+}
+
+.table-header p {
+  font-size: 13px;
+  color: #7f8c8d;
+  margin: 0;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: 1px solid #ecf0f1;
+}
+
+.health-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.health-table thead {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ecf0f1 100%);
+  border-bottom: 2px solid #bdc3c7;
+}
+
+.health-table th {
+  padding: 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #2c3e50;
+  white-space: nowrap;
+}
+
+.health-table tbody tr {
+  border-bottom: 1px solid #ecf0f1;
+  transition: background-color 0.2s ease;
+}
+
+.health-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.inventory-row.status-critical {
+  background-color: rgba(231, 76, 60, 0.05);
+}
+
+.inventory-row.status-critical:hover {
+  background-color: rgba(231, 76, 60, 0.1);
+}
+
+.inventory-row.status-monitor {
+  background-color: rgba(243, 156, 18, 0.03);
+}
+
+.inventory-row.status-monitor:hover {
+  background-color: rgba(243, 156, 18, 0.08);
+}
+
+.health-table td {
+  padding: 14px 16px;
+}
+
+.product-name {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.stock-value {
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+.demand-value {
+  color: #3498db;
+  font-weight: 500;
+}
+
+.stock-days {
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: #ecf0f1;
+  color: #2c3e50;
+}
+
+.stock-days.warning {
+  background: #ffe5e5;
+  color: #c0392b;
+  font-weight: 600;
+}
+
+.spoilage-risk {
+  font-weight: 600;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  color: white;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.status-badge.healthy {
+  background-color: #2ecc71;
+}
+
+.status-badge.monitor {
+  background-color: #f39c12;
+}
+
+.status-badge.critical {
+  background-color: #e74c3c;
+}
+
+.table-legend {
+  display: flex;
+  gap: 30px;
+  margin-top: 20px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #2c3e50;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1024px) {
+  .health-table {
+    font-size: 12px;
+  }
+
+  .health-table th,
+  .health-table td {
+    padding: 10px 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-legend {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
