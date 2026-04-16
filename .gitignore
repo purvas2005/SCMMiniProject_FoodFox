@@ -1,2 +1,5 @@
 .env
 .env.local
+foodfox-dashboard/node_modules
+foodfox-backend/node_modules
+foodfox-backend/.env
