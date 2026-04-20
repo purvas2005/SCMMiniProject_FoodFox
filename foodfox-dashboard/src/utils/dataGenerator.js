@@ -95,9 +95,15 @@ export const filterData = (data, filters) => {
   let filteredForecasts = data.forecasts
   let filteredInventory = data.inventory
 
+  const forecastsHaveRegion = filteredForecasts.some(
+    f => typeof f.region === 'string' && f.region.length > 0
+  )
+
   if (filters.region !== 'All') {
     filteredSales = filteredSales.filter(s => s.region === filters.region)
-    filteredForecasts = filteredForecasts.filter(f => f.region === filters.region)
+    if (forecastsHaveRegion) {
+      filteredForecasts = filteredForecasts.filter(f => f.region === filters.region)
+    }
   }
 
   if (filters.category !== 'All') {
