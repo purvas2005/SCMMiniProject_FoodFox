@@ -44,20 +44,22 @@ function App() {
           products,
           salesHistory: salesHistory.map(s => ({
             ...s,
-            month: s.month_name,
+            month_name: s.month_name || s.month,
             product_id: s.product_id,
             product_name: s.product_name,
             region: s.region,
             actual_quantity: s.actual_quantity,
-            is_promotion: s.is_promotion
+            is_promotion: s.is_promotion,
+            sale_date: s.sale_date
           })),
           forecasts: forecasts.map(f => ({
             ...f,
-            month: f.month_name,
+            month_name: f.month_name || f.month,
             product_id: f.product_id,
             product_name: f.product_name,
             predicted_quantity: f.predicted_quantity,
-            confidence: f.confidence_interval
+            confidence: f.confidence_interval,
+            forecast_date: f.forecast_date
           })),
           inventory,
           kpis,

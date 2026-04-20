@@ -17,8 +17,11 @@ export const generateMockData = () => {
   for (let i = 0; i < 12; i++) {
     for (const product of products) {
       for (const region of regions) {
+        const saleDate = new Date(2026, i, 1)
         salesHistory.push({
           month: months[i],
+          month_name: months[i],
+          sale_date: saleDate.toISOString().split('T')[0],
           product_id: product.id,
           product_name: product.name,
           region,
@@ -31,14 +34,19 @@ export const generateMockData = () => {
 
   // Generate demand forecasts
   const forecasts = []
+  const currentMonth = new Date().getMonth()
   for (const product of products) {
     for (const region of regions) {
       for (let i = 0; i < 6; i++) {
+        const monthIndex = (currentMonth + i) % 12
+        const forecastDate = new Date(2026, monthIndex, 1)
         forecasts.push({
           product_id: product.id,
           product_name: product.name,
           region,
-          month: months[(new Date().getMonth() + i) % 12],
+          month: months[monthIndex],
+          month_name: months[monthIndex],
+          forecast_date: forecastDate.toISOString().split('T')[0],
           predicted_quantity: Math.floor(Math.random() * 600) + 150,
           confidence: (Math.random() * 25 + 75).toFixed(2),
         })

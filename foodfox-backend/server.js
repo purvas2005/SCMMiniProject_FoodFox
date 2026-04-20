@@ -32,7 +32,6 @@ const MOCK_PRODUCTS = [
 const MOCK_REGIONS = ['North', 'South', 'East', 'West', 'Central'];
 const MOCK_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 
-const formatShortMonth = (date) => date.toLocaleString('en-US', { month: 'short' });
 const formatISODate = (date) => date.toISOString().slice(0, 10);
 const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
@@ -51,7 +50,7 @@ const createMockDataset = () => {
       for (const region of MOCK_REGIONS) {
         const quantitySold = randomInt(120, 520) + product.product_id * 10 + monthOffset * 8;
         salesHistory.push({
-          sales_id: salesId,
+          sale_id: salesId,
           product_id: product.product_id,
           product_name: product.product_name,
           sale_date: formatISODate(saleDate),
@@ -122,12 +121,12 @@ const createMockDataset = () => {
 
   for (const sale of salesHistory) {
     const entry = comparisonMap.get(sale.month_name);
-    entry.actual_quantity += sale.actual_quantity;
+    if (entry) entry.actual_quantity += sale.actual_quantity;
   }
 
   for (const forecast of forecasts) {
     const entry = comparisonMap.get(forecast.month_name);
-    entry.predicted_quantity += forecast.predicted_quantity;
+    if (entry) entry.predicted_quantity += forecast.predicted_quantity;
   }
 
   const forecastComparison = MOCK_MONTHS.map((month) => comparisonMap.get(month));
@@ -185,6 +184,13 @@ async function queryRows(query) {
   }
 }
 
+// Helper function to safely convert to number
+const safeToNumber = (value, defaultVal = 0) => {
+  if (value === null || value === undefined) return defaultVal;
+  const num = parseFloat(value);
+  return isNaN(num) ? defaultVal : num;
+};
+
 // Root route for browser visits
 app.get('/', (req, res) => {
   res.json({
@@ -204,11 +210,11 @@ app.get('/api/products', async (req, res) => {
   res.json(products || MOCK_DATA.products);
 });
 
-// Get sales history
+// Get sales history - FIXED: use sale_id instead of sales_id
 app.get('/api/sales-history', async (req, res) => {
   const query = `
     SELECT 
-      sh.sales_id,
+      sh.sale_id,
       sh.product_id,
       p.product_name,
       sh.sale_date,
@@ -271,55 +277,59 @@ app.get('/api/inventory', async (req, res) => {
 
 // Get KPI metrics
 app.get('/api/kpis', async (req, res) => {
-  const mapeQuery = `
-    SELECT AVG(ABS((df.predicted_quantity - sh.quantity_sold) / sh.quantity_sold * 100)) as mape
-    FROM DemandForecasts df
-    JOIN SalesHistory sh ON df.product_id = sh.product_id
-    WHERE DATE(df.forecast_date) = DATE(sh.sale_date)
-  `;
+  try {
+    const mapeQuery = `
+      SELECT AVG(ABS((df.predicted_quantity - sh.quantity_sold) / NULLIF(sh.quantity_sold, 0) * 100)) as mape
+      FROM DemandForecasts df
+      JOIN SalesHistory sh ON df.product_id = sh.product_id
+      WHERE DATE(df.forecast_date) = DATE(sh.sale_date)
+    `;
 
-  const otifQuery = `
-    SELECT 
-      COUNT(CASE WHEN sh.quantity_sold > 0 THEN 1 END) * 100.0 / COUNT(*) as otif
-    FROM SalesHistory sh
-  `;
+    const otifQuery = `
+      SELECT 
+        COUNT(CASE WHEN sh.quantity_sold > 0 THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0) as otif
+      FROM SalesHistory sh
+    `;
 
-  const spoilageQuery = `
-    SELECT 
-      COALESCE(
-        (SELECT COUNT(*) FROM Inventory WHERE current_stock = 0) * 100.0 / COUNT(*),
-        0
-      ) as spoilage_rate
-    FROM Inventory
-  `;
+    const spoilageQuery = `
+      SELECT 
+        COALESCE(
+          (SELECT COUNT(*) FROM Inventory WHERE current_stock = 0) * 100.0 / NULLIF(COUNT(*), 0),
+          0
+        ) as spoilage_rate
+      FROM Inventory
+    `;
 
-  const [mapeResult, otifResult, spoilageResult] = await Promise.all([
-    queryRows(mapeQuery),
-    queryRows(otifQuery),
-    queryRows(spoilageQuery)
-  ]);
+    const [mapeResult, otifResult, spoilageResult] = await Promise.all([
+      queryRows(mapeQuery),
+      queryRows(otifQuery),
+      queryRows(spoilageQuery)
+    ]);
 
-  if (!mapeResult || !otifResult || !spoilageResult) {
-    return res.json({
+    // Safe extraction with defaults
+    const mape = safeToNumber(mapeResult?.[0]?.mape, MOCK_DATA.kpis.mape);
+    const otif = safeToNumber(otifResult?.[0]?.otif, MOCK_DATA.kpis.otif);
+    const spoilageRate = safeToNumber(spoilageResult?.[0]?.spoilage_rate, MOCK_DATA.kpis.spoilageRate);
+
+    const response = {
+      mape: parseFloat(mape.toFixed(2)),
+      otif: parseFloat(otif.toFixed(2)),
+      spoilageRate: parseFloat(spoilageRate.toFixed(2)),
+      promotionLift: 22.5,
+      revenueAtRisk: 245000,
+      forecastAccuracy: parseFloat((100 - mape).toFixed(2)),
+      timestamp: new Date()
+    };
+
+    res.json(response);
+  } catch (error) {
+    console.error('KPI calculation error:', error.message);
+    res.json({
       ...MOCK_DATA.kpis,
       forecastAccuracy: parseFloat((100 - MOCK_DATA.kpis.mape).toFixed(2)),
       timestamp: new Date()
     });
   }
-
-  const mape = mapeResult[0]?.mape || MOCK_DATA.kpis.mape;
-  const otif = otifResult[0]?.otif || MOCK_DATA.kpis.otif;
-  const spoilageRate = spoilageResult[0]?.spoilage_rate || MOCK_DATA.kpis.spoilageRate;
-
-  res.json({
-    mape: parseFloat(mape.toFixed(2)),
-    otif: parseFloat(otif.toFixed(2)),
-    spoilageRate: parseFloat(spoilageRate.toFixed(2)),
-    promotionLift: 22.5,
-    revenueAtRisk: 245000,
-    forecastAccuracy: parseFloat((100 - mape).toFixed(2)),
-    timestamp: new Date()
-  });
 });
 
 // Get regional demand heatmap data
@@ -350,7 +360,7 @@ app.get('/api/forecast-comparison', async (req, res) => {
     SELECT 
       MONTHNAME(sh.sale_date) as month,
       SUM(sh.quantity_sold) as actual_quantity,
-      SUM(df.predicted_quantity) as predicted_quantity
+      COALESCE(SUM(df.predicted_quantity), 0) as predicted_quantity
     FROM SalesHistory sh
     LEFT JOIN DemandForecasts df ON sh.product_id = df.product_id 
       AND DATE(df.forecast_date) = DATE(sh.sale_date)
@@ -370,11 +380,11 @@ app.get('/api/inventory-health', async (req, res) => {
       p.product_name,
       p.category,
       p.shelf_life_days,
-      i.current_stock,
+      COALESCE(i.current_stock, 0) as current_stock,
       COALESCE(AVG(sh.quantity_sold), 0) as avg_monthly_demand,
       CASE 
-        WHEN i.current_stock = 0 THEN 'Critical'
-        WHEN i.current_stock < COALESCE(AVG(sh.quantity_sold), 0) * 0.5 THEN 'Monitor'
+        WHEN COALESCE(i.current_stock, 0) = 0 THEN 'Critical'
+        WHEN COALESCE(i.current_stock, 0) < COALESCE(AVG(sh.quantity_sold), 0) * 0.5 THEN 'Monitor'
         ELSE 'Healthy'
       END as health_status
     FROM Products p
@@ -384,8 +394,8 @@ app.get('/api/inventory-health', async (req, res) => {
     GROUP BY p.product_id, p.product_name, p.category, p.shelf_life_days, i.current_stock
     ORDER BY 
       CASE 
-        WHEN i.current_stock = 0 THEN 1
-        WHEN i.current_stock < COALESCE(AVG(sh.quantity_sold), 0) * 0.5 THEN 2
+        WHEN COALESCE(i.current_stock, 0) = 0 THEN 1
+        WHEN COALESCE(i.current_stock, 0) < COALESCE(AVG(sh.quantity_sold), 0) * 0.5 THEN 2
         ELSE 3
       END
   `;

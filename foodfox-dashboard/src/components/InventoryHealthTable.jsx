@@ -1,25 +1,35 @@
 import { useContext, useMemo } from 'react'
 import { DashboardContext } from '../App'
 import { filterData } from '../utils/dataGenerator'
+import { filterForecastsByDateRange } from '../utils/dateFilters'
 import './InventoryHealthTable.css'
 
 const InventoryHealthTable = () => {
   const { dashboardData, filters } = useContext(DashboardContext)
-  const { filteredInventory, filteredForecasts } = useMemo(() => 
+  const { filteredInventory, filteredForecasts: regionFilteredForecasts } = useMemo(() => 
     filterData(dashboardData, filters), 
     [dashboardData, filters]
+  )
+
+  // Filter forecasts by time range
+  const filteredForecasts = useMemo(() =>
+    filterForecastsByDateRange(regionFilteredForecasts, filters.timeRange),
+    [regionFilteredForecasts, filters.timeRange]
   )
 
   // Calculate stockout risk for each product
   const inventoryHealth = useMemo(() => {
     return filteredInventory.map(item => {
-      // Get average predicted demand for this product
+      // Get average predicted demand for this product from the filtered time range
       const productForecasts = filteredForecasts.filter(f => f.product_id === item.product_id)
       const avgPredicted = productForecasts.length > 0 
         ? Math.round(productForecasts.reduce((sum, f) => sum + f.predicted_quantity, 0) / productForecasts.length)
         : 0
 
-      const stockDays = item.current_stock > 0 ? Math.round(item.current_stock / (avgPredicted / 30)) : 0
+      const stockDays = item.current_stock > 0 && avgPredicted > 0 
+        ? Math.round((item.current_stock / avgPredicted) * 30)
+        : item.current_stock > 0 ? 999 : 0
+      
       const spoilageRisk = item.shelf_life_days - stockDays
       
       return {
@@ -47,15 +57,26 @@ const InventoryHealthTable = () => {
     return colors[status] || '#95a5a6'
   }
 
-  const getRiskColor = (risk) => {
-    return risk === 'HIGH' ? '#e74c3c' : '#f39c12'
+  const getTimeRangeLabel = () => {
+    switch (filters.timeRange) {
+      case '3months':
+        return 'Last 3 Months'
+      case '6months':
+        return 'Last 6 Months'
+      case '12months':
+        return 'Last 12 Months'
+      case 'ytd':
+        return 'Year to Date'
+      default:
+        return '6-Month'
+    }
   }
 
   return (
     <div className="inventory-health-table">
       <div className="table-header">
         <h2>Inventory Health & Stockout Prevention</h2>
-        <p>Products requiring immediate attention highlighted in red</p>
+        <p>{getTimeRangeLabel()} Forecast - Products requiring immediate attention highlighted in red</p>
       </div>
 
       <div className="table-wrapper">
@@ -65,7 +86,7 @@ const InventoryHealthTable = () => {
               <th>Product Name</th>
               <th>Category</th>
               <th>Current Stock</th>
-              <th>Predicted Demand (Monthly Avg)</th>
+              <th>Predicted Demand (Avg)</th>
               <th>Stock Days Left</th>
               <th>Shelf Life (Days)</th>
               <th>Spoilage Risk</th>
