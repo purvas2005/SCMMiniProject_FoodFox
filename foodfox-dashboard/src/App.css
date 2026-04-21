@@ -81,6 +81,41 @@ body {
   display: block;
 }
 
+/* Main Navigation */
+.main-nav {
+  display: flex;
+  background: #fff;
+  border-bottom: 2px solid #e0e0e0;
+  padding: 0 40px;
+  gap: 5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow-x: auto;
+}
+
+.nav-btn {
+  padding: 16px 20px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+  white-space: nowrap;
+}
+
+.nav-btn:hover {
+  color: #667eea;
+  background: #f8f9fa;
+}
+
+.nav-btn.active {
+  color: #667eea;
+  border-bottom-color: #667eea;
+  background: #f8f9fa;
+}
+
 /* Dashboard Layout */
 .dashboard-layout {
   display: flex;
@@ -164,5 +199,14 @@ body {
 
   .header-content h1 {
     font-size: 24px;
+  }
+
+  .main-nav {
+    padding: 0 20px;
+  }
+
+  .nav-btn {
+    padding: 12px 15px;
+    font-size: 12px;
   }
 }

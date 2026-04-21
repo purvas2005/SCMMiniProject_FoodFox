@@ -8,9 +8,17 @@ import RegionalHeatmap from './components/RegionalHeatmap'
 import { api } from './services/api'
 import { generateMockData } from './utils/dataGenerator'
 
+// Import ERP Modules
+import ProcurementModule from './components/modules/ProcurementModule'
+import WarehouseModule from './components/modules/WarehouseModule'
+import OrdersModule from './components/modules/OrdersModule'
+import SuppliersModule from './components/modules/SuppliersModule'
+import AnalyticsModule from './components/modules/AnalyticsModule'
+
 export const DashboardContext = createContext()
 
 function App() {
+  const [activeModule, setActiveModule] = useState('dashboard')
   const [filters, setFilters] = useState({
     region: 'All',
     category: 'All',
@@ -70,7 +78,6 @@ function App() {
         setDashboardData(data)
       } catch (err) {
         console.error('Failed to fetch real data, using mock data:', err)
-        // Fallback to mock data if backend is not available
         const mockData = generateMockData()
         setDashboardData(mockData)
         setError('Using sample data - Backend connection unavailable')
@@ -90,7 +97,7 @@ function App() {
     return (
       <div className="loading-container">
         <div className="spinner"></div>
-        <p>Loading FoodFox Dashboard...</p>
+        <p>Loading FoodFox ERP System...</p>
       </div>
     )
   }
@@ -106,44 +113,91 @@ function App() {
   }
 
   return (
-    <DashboardContext.Provider value={{ filters, dashboardData }}>
+    <DashboardContext.Provider value={{ filters, dashboardData, activeModule }}>
       <div className="app">
         <header className="app-header">
           <div className="header-content">
             <h1 className="app-title">🦊 FoodFox Foods</h1>
-            <p className="app-subtitle">Predictive Demand Management Dashboard</p>
+            <p className="app-subtitle">Enterprise Supply Chain Management System</p>
           </div>
           <div className="header-meta">
-            <span className="company-info">Real-time Supply Chain Analytics</span>
+            <span className="company-info">Real-time ERP & Analytics Platform</span>
             {error && <span className="connection-status warning">{error}</span>}
           </div>
         </header>
 
-        <div className="dashboard-layout">
-          <FilterSidebar onFilterChange={handleFilterChange} />
-          
-          <main className="main-content">
-            <section className="kpi-section">
-              <KPIContainer />
-            </section>
+        <nav className="main-nav">
+          <button 
+            className={`nav-btn ${activeModule === 'dashboard' ? 'active' : ''}`}
+            onClick={() => setActiveModule('dashboard')}
+          >
+            📊 Dashboard
+          </button>
+          <button 
+            className={`nav-btn ${activeModule === 'procurement' ? 'active' : ''}`}
+            onClick={() => setActiveModule('procurement')}
+          >
+            🛒 Procurement
+          </button>
+          <button 
+            className={`nav-btn ${activeModule === 'warehouse' ? 'active' : ''}`}
+            onClick={() => setActiveModule('warehouse')}
+          >
+            🏭 Warehouse
+          </button>
+          <button 
+            className={`nav-btn ${activeModule === 'orders' ? 'active' : ''}`}
+            onClick={() => setActiveModule('orders')}
+          >
+            📦 Orders
+          </button>
+          <button 
+            className={`nav-btn ${activeModule === 'suppliers' ? 'active' : ''}`}
+            onClick={() => setActiveModule('suppliers')}
+          >
+            🤝 Suppliers
+          </button>
+          <button 
+            className={`nav-btn ${activeModule === 'analytics' ? 'active' : ''}`}
+            onClick={() => setActiveModule('analytics')}
+          >
+            📈 Analytics
+          </button>
+        </nav>
 
-            <section className="charts-section">
-              <div className="chart-container">
-                <ForecastChart />
-              </div>
-              <div className="chart-container">
-                <RegionalHeatmap />
-              </div>
-            </section>
+        {activeModule === 'dashboard' && (
+          <div className="dashboard-layout">
+            <FilterSidebar onFilterChange={handleFilterChange} />
+            
+            <main className="main-content">
+              <section className="kpi-section">
+                <KPIContainer />
+              </section>
 
-            <section className="inventory-section">
-              <InventoryHealthTable />
-            </section>
-          </main>
-        </div>
+              <section className="charts-section">
+                <div className="chart-container">
+                  <ForecastChart />
+                </div>
+                <div className="chart-container">
+                  <RegionalHeatmap />
+                </div>
+              </section>
+
+              <section className="inventory-section">
+                <InventoryHealthTable />
+              </section>
+            </main>
+          </div>
+        )}
+
+        {activeModule === 'procurement' && <ProcurementModule />}
+        {activeModule === 'warehouse' && <WarehouseModule />}
+        {activeModule === 'orders' && <OrdersModule />}
+        {activeModule === 'suppliers' && <SuppliersModule />}
+        {activeModule === 'analytics' && <AnalyticsModule />}
 
         <footer className="app-footer">
-          <p>&copy; 2026 FoodFox Foods - Supply Chain Management Dashboard</p>
+          <p>&copy; 2026 FoodFox Foods - Enterprise Supply Chain Management System</p>
         </footer>
       </div>
     </DashboardContext.Provider>
