@@ -4,6 +4,13 @@ import './ModuleStyles.css'
 const AnalyticsModule = () => {
   const [chartView, setChartView] = useState('demand')
 
+  const chartTabs = [
+    { key: 'demand', label: 'Demand Analysis' },
+    { key: 'category', label: 'Category Performance' },
+    { key: 'regional', label: 'Regional Analysis' },
+    { key: 'kpi', label: 'KPI Dashboard' },
+  ]
+
   const demandData = [
     { month: 'Jan', actual: 8500, forecast: 8200, variance: 3.7 },
     { month: 'Feb', actual: 7800, forecast: 7900, variance: -1.3 },
@@ -40,10 +47,17 @@ const AnalyticsModule = () => {
       <div className="module-header">
         <h2>📈 Advanced Analytics & Reporting</h2>
         <div className="view-toggle">
-          <button className={`toggle-btn ${chartView === 'demand' ? 'active' : ''}`} onClick={() => setChartView('demand')}>Demand Analysis</button>
-          <button className={`toggle-btn ${chartView === 'category' ? 'active' : ''}`} onClick={() => setChartView('category')}>Category Performance</button>
-          <button className={`toggle-btn ${chartView === 'regional' ? 'active' : ''}`} onClick={() => setChartView('regional')}>Regional Analysis</button>
-          <button className={`toggle-btn ${chartView === 'kpi' ? 'active' : ''}`} onClick={() => setChartView('kpi')}>KPI Dashboard</button>
+          {chartTabs.map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              aria-pressed={chartView === tab.key}
+              className={`toggle-btn ${chartView === tab.key ? 'active' : ''}`}
+              onClick={() => setChartView(tab.key)}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
